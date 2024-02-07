@@ -1,0 +1,65 @@
+import os
+import yaml
+
+def replace_values(old_file, messages_file):
+    """
+    Replaces values in 'messages.yml' with matching values from 'old.yml'.
+
+    Parameters:
+    - old_file (str): Path to the 'old.yml' file.
+    - messages_file (str): Path to the 'messages.yml' file.
+
+    Returns:
+    None
+    """
+
+    # Get the directory of the files
+    old_directory = os.path.dirname(old_file)
+    messages_directory = os.path.dirname(messages_file)
+
+    # Get the absolute paths for the YAML files
+    old_path = os.path.abspath(old_file)
+    messages_path = os.path.abspath(messages_file)
+
+    # Read the contents of the old.yml file
+    with open(old_path, 'r', encoding='utf-8') as old_stream:
+        old_data = yaml.safe_load(old_stream)
+
+    # Read the contents of the messages.yml file
+    with open(messages_path, 'r', encoding='utf-8') as messages_stream:
+        messages_data = yaml.safe_load(messages_stream)
+
+    # Replace values in messages.yml with matching values from old.yml
+    replaced_values_count = 0
+    changes_report = {}
+
+    for key in old_data:
+        if key in messages_data:
+            if messages_data[key] != old_data[key]:
+                changes_report[key] = {
+                    'old_value': messages_data[key],
+                    'new_value': old_data[key]
+                }
+                messages_data[key] = old_data[key]
+                replaced_values_count += 1
+
+    if replaced_values_count > 0:
+        # Write the updated contents back to messages.yml
+        with open(messages_path, 'w', encoding='utf-8') as messages_stream:
+            yaml.dump(messages_data, messages_stream, default_flow_style=False, allow_unicode=True)
+
+        # Write the detailed report to a file
+        report_path = os.path.join(messages_directory, 'detailed_report.yml')
+        with open(report_path, 'w', encoding='utf-8') as report_stream:
+            for key, values in changes_report.items():
+                report_stream.write(f"Key: {key}\n")
+                report_stream.write(f"Old data: {values['old_value']}\n")
+                report_stream.write(f"New data: {values['new_value']}\n\n")
+
+        print(f"{replaced_values_count} values in {messages_file} have been replaced with matching values from {old_file}.")
+        print(f"Detailed report saved to {report_path}.")
+    else:
+        print(f"No changes were made to {messages_file}.")
+
+# Specify the full paths for 'old.yml' and 'messages.yml' using raw strings
+replace_values(r'C:\Users\Jorge\Desktop\Companys\GoldCraft [All Files]\scrpits\old.yml', r'C:\Users\Jorge\Desktop\Companys\GoldCraft [All Files]\scrpits\messages.yml')
